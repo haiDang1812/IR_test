@@ -12,6 +12,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 EMBED_MODEL_NAME = os.getenv("EMBED_MODEL_NAME", "BAAI/bge-m3")
+# EMBED_MODEL_NAME = os.getenv("EMBED_MODEL_NAME", "bkai-foundation-models/vietnamese-bi-encoder ")
+# EMBED_MODEL_NAME = os.getenv("EMBED_MODEL_NAME", "Qwen/Qwen3-Embedding-0.6B")
+
 MODEL_CACHE_DIR  = os.getenv("MODEL_CACHE_DIR", os.path.join(os.path.dirname(__file__), "models"))
 
 os.makedirs(MODEL_CACHE_DIR, exist_ok=True)

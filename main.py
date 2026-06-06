@@ -1,4 +1,6 @@
-import os, re, uuid
+import os
+import re
+import uuid
 from typing import Optional, List
 
 from dotenv import load_dotenv
@@ -9,16 +11,16 @@ load_dotenv()
 
 # ── Config ────────────────────────────────────────────────────────────────────
 EMBED_MODEL_NAME = os.getenv("EMBED_MODEL_NAME", "BAAI/bge-m3")
-MODEL_CACHE_DIR  = os.getenv("MODEL_CACHE_DIR", os.path.join(os.path.dirname(__file__), "models"))
+MODEL_CACHE_DIR = os.getenv("MODEL_CACHE_DIR", os.path.join(os.path.dirname(__file__), "models"))
 
 # Proxy LLM theo slide: dùng MSSV làm API key
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "http://10.170.45.200:8000/api/v1/proxy")
-LLM_MODEL    = os.getenv("LLM_MODEL", "gpt-4o-mini")
-STUDENT_ID   = os.getenv("STUDENT_ID", "B22DCAT083")  # MSSV — dùng làm API key
+LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")
+STUDENT_ID = os.getenv("STUDENT_ID", "B22DCAT083")  # MSSV — dùng làm API key
 
-CHUNK_SIZE    = int(os.getenv("CHUNK_SIZE", 1024))
+CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", 1024))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", 64))
-TOP_K         = int(os.getenv("TOP_K", 5))
+TOP_K = int(os.getenv("TOP_K", 5))
 
 # Khi chạy offline (trong LAN thi), buộc transformers/HF KHÔNG gọi mạng.
 # Model phải đã được tải sẵn vào MODEL_CACHE_DIR (chạy download_model.py trước).
