@@ -11,6 +11,11 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 .venv/Scripts/activate
 ```
 
+If the Set-ExecutionPolicy above doesn't work, use this instead
+```bash
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy ByPass
+```
+
 # Download embedding model
 ### Choose model in download_model.py
 ```bash
@@ -51,6 +56,9 @@ python trigger.py register --host {student_ipv4} --port {student_server_port}
 > - `student_server_port` — port defined when run uvicorn command
 
 ### Evalue
+For the first evaluate time, set the value of 'document_received' [trigger.py](trigger.py#L80) is False
+
+From the second time, set it as True
 ```bash
 python trigger.py evaluate
 ```
