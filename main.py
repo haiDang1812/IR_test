@@ -2,6 +2,7 @@ import os
 import re
 import uuid
 from typing import Optional, List
+import pickle
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
@@ -21,6 +22,10 @@ STUDENT_ID = os.getenv("STUDENT_ID", "B22DCAT083")  # MSSV — dùng làm API ke
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", 1024))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", 64))
 TOP_K = int(os.getenv("TOP_K", 5))
+
+# FAISS config
+INDEX_PATH = os.getenv("INDEX_PATH", os.path.join(os.path.dirname(__file__), "faiss_index.bin"))
+STORE_PATH = os.getenv("STORE_PATH", os.path.join(os.path.dirname(__file__), "store.pkl"))
 
 # Khi chạy offline (trong LAN thi), buộc transformers/HF KHÔNG gọi mạng.
 # Model phải đã được tải sẵn vào MODEL_CACHE_DIR (chạy download_model.py trước).
@@ -69,7 +74,43 @@ def db_search(vector: List[float], k: int) -> List[dict]:
 def db_count() -> int:
     return _index.ntotal
 
+def db_save():
+    faiss.write_index(_index, INDEX_PATH)
+    with open(STORE_PATH, "wb") as f:
+        pickle.dump({"store": _store, "id_list": _id_list, "dim": EMBED_DIM}, f)
+    print(f"[db] saved {_index.ntotal} vectors -> {INDEX_PATH}, {STORE_PATH}")
+
+def db_load() -> bool:
+    global _index, _store, _id_list
+
+    if not (os.path.exists(INDEX_PATH) and os.path.exists(STORE_PATH)):
+        return False
+
+    try:
+        loaded_index = faiss.read_index(INDEX_PATH)
+        with open(STORE_PATH, "rb") as f:
+            data = pickle.load(f)
+
+        # Đảm bảo index đã lưu khớp với model embedding hiện tại
+        if loaded_index.d != EMBED_DIM:
+            print(f"[db] skip load: dim mismatch ({loaded_index.d} != {EMBED_DIM})")
+            return False
+
+        _index = loaded_index
+        _store = data["store"]
+        _id_list = data["id_list"]
+        print(f"[db] loaded {_index.ntotal} vectors <- {INDEX_PATH}, {STORE_PATH}")
+        return True
+    except Exception as e:
+        print(f"[db] load failed: {e}")
+        return False
+
 print("[db] FAISS in-memory")
+
+if db_load():
+    print(f"[db] restored from disk, indexed={db_count()}")
+else:
+    print("[db] no saved data found, starting empty")
 
 # App
 app = FastAPI(title="RAG Competition — Student Server")
@@ -150,6 +191,8 @@ def upload(req: UploadRequest):
     vectors = get_embeddings(chunks)
     for i, (chunk, vec) in enumerate(zip(chunks, vectors)):
         db_upsert(f"{doc_id}_chunk_{i}", vec, chunk)
+
+    db_save()
 
     return UploadResponse(status="success", doc_id=doc_id, chunks=len(chunks))
 

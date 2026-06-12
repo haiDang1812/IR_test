@@ -15,6 +15,7 @@ import os
 import socket
 import sys
 from urllib.parse import urlparse
+import pickle
 
 import httpx
 from dotenv import load_dotenv
@@ -73,8 +74,10 @@ def register(ip: str | None, port: int) -> None:
 def evaluate() -> None:
     print(f"[evaluate] student={STUDENT_ID} — bắt đầu thi...")
     print("(Teacher sẽ gọi /upload (120s) rồi 10 lần /ask (60s mỗi câu) tới server của bạn)")
+    # Update request body
     resp = httpx.post(
         f"{TEACHER_BASE_URL}/competition/evaluate",
+        json={"document_received": False},
         headers=HEADERS,
         timeout=60 * 15,  # tối đa 15 phút cho toàn bộ quá trình
     )
